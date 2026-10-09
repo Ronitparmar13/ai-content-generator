@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Content Studio</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+<div class="shell">
+
+    <header class="topbar">
+        <a class="brand" href="{{ url_for('index') }}">
+            <span class="brand-mark">CS</span>
+
+            <span>
+                <small>AI WRITING WORKSPACE</small>
+                <strong>Content Studio</strong>
+            </span>
+        </a>
+
+        <span class="status">
+            <span class="status-dot"></span>
+            GROQ AI ENGINE
+        </span>
+    </header>
+
+
+    <main>
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">IDEAS INTO WORDS</p>
+
+                <h1>
+                    Make your next
+                    <span>great thing.</span>
+                </h1>
+
+                <p class="hero-description">
+                    Create thoughtful blog posts, compelling social
+                    captions, and clear summaries. Choose your style,
+                    describe your idea, and shape the result.
+                </p>
+            </div>
+
+            <div class="hero-symbol" aria-hidden="true">
+                <span class="symbol-core">✳</span>
+                <span class="symbol-label">WRITE / REFINE / REPEAT</span>
+            </div>
+        </section>
+
+
+        {% if error %}
+        <div class="notice error" role="alert">
+            <strong>Something needs attention</strong>
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
+
+        {% if success %}
+        <div class="notice success" role="status">
+            <strong>Ready to read</strong>
+            <p>{{ success }}</p>
+        </div>
+        {% endif %}
+
+
+        <form
+            id="generatorForm"
+            action="{{ url_for('index') }}"
+            method="POST"
+        >
+            <section class="workspace">
+
+                <div class="input-panel">
+                    <div class="section-heading">
+                        <span class="step">01</span>
+                        <div>
+                            <h2>Shape your content</h2>
+                            <p>Give the AI a clear creative direction.</p>
+                        </div>
+                    </div>
+
+
+                    <label class="field-label" for="contentType">
+                        CONTENT TYPE
+                    </label>
+
+                    <select id="contentType" name="content_type">
+                        {% for value, label in content_types.items() %}
+                        <option
+                            value="{{ value }}"
+                            {% if form_data.content_type == value %}selected{% endif %}
+                        >
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+
+                    <div id="topicField" class="field">
+                        <label class="field-label" for="topic">
+                            TOPIC OR IDEA
+                        </label>
+
+                        <input
+                            id="topic"
+                            name="topic"
+                            type="text"
+                            maxlength="500"
+                            value="{{ form_data.topic }}"
+                            placeholder="e.g. How AI is changing education"
+                        >
+
+                        <small class="helper">
+                            Be specific for a more useful result.
+                        </small>
+                    </div>
+
+
+                    <div id="sourceField" class="field" hidden>
+                        <label class="field-label" for="sourceText">
+                            TEXT TO SUMMARIZE
+                        </label>
+
+                        <textarea
+                            id="sourceText"
+                            name="source_text"
+                            maxlength="25000"
+                            rows="6"
+                            placeholder="Paste the text you want to summarize..."
+                        >{{ form_data.source_text }}</textarea>
+
+                        <small class="helper">
+                            Your source text is used to create a faithful summary.
+                        </small>
+                    </div>
+
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label class="field-label" for="tone">
+                                WRITING TONE
+                            </label>
+
+                            <select id="tone" name="tone">
+                                {% for value, label in tones.items() %}
+                                <option
+                                    value="{{ value }}"
+                                    {% if form_data.tone == value %}selected{% endif %}
+                                >
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="length">
+                                LENGTH
+                            </label>
+
+                            <select id="length" name="length">
+                                {% for value, label in lengths.items() %}
+                                <option
+                                    value="{{ value }}"
+                                    {% if form_data.length == value %}selected{% endif %}
+                                >
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+
+                    <div class="field">
+                        <label class="field-label" for="customInstructions">
+                            EXTRA INSTRUCTIONS <span class="optional">OPTIONAL</span>
+                        </label>
+
+                        <textarea
+                            id="customInstructions"
+                            name="custom_instructions"
+                            rows="3"
+                            maxlength="2000"
+                            placeholder="e.g. Include practical examples and avoid jargon."
+                        >{{ form_data.custom_instructions }}</textarea>
+                    </div>
+
+
+                    <button
+                        class="primary-button"
+                        type="submit"
+                        name="action"
+                        value="generate"
+                        id="generateButton"
+                    >
+                        <span>Generate content</span>
+                        <span class="button-arrow">↗</span>
+                    </button>
+
+                    <p class="privacy-note">
+                        Your prompts are sent to the configured AI provider
+                        to generate the requested content.
+                    </p>
+                </div>
+
+
+                <div class="output-panel">
+                    <div class="section-heading">
+                        <span class="step">02</span>
+                        <div>
+                            <h2>Your draft</h2>
+                            <p>Generate, review, and improve your result.</p>
+                        </div>
+                    </div>
+
+
+                    {% if generated_content %}
+                    <div class="output-tools">
+                        <span class="output-badge">
+                            <span class="status-dot"></span>
+                            GENERATED
+                        </span>
+
+                        <button
+                            class="secondary-button"
+                            type="button"
+                            id="copyButton"
+                        >
+                            Copy text
+                        </button>
+                    </div>
+                    {% endif %}
+
+
+                    <div class="output-area">
+                        {% if generated_content %}
+                        <textarea
+                            id="outputContent"
+                            readonly
+                            aria-label="Generated content"
+                        >{{ generated_content }}</textarea>
+                        {% else %}
+                        <div class="empty-state">
+                            <div class="empty-symbol">✳</div>
+                            <h3>Your next idea starts here.</h3>
+                            <p>
+                                Choose a content type, set your tone,
+                                and generate your first draft.
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+
+                    {% if generated_content %}
+                    <div class="count-row">
+                        <span id="wordCount">0 words</span>
+                        <span id="characterCount">0 characters</span>
+                    </div>
+
+                    <textarea
+                        name="previous_content"
+                        hidden
+                    >{{ generated_content }}</textarea>
+
+
+                    <div class="refine-box">
+                        <label class="field-label" for="refinementInstruction">
+                            REFINE THIS DRAFT
+                        </label>
+
+                        <textarea
+                            id="refinementInstruction"
+                            name="refinement_instruction"
+                            rows="3"
+                            maxlength="2000"
+                            placeholder="e.g. Make the introduction more engaging and shorten the conclusion."
+                        >{{ form_data.refinement_instruction }}</textarea>
+
+                        <div class="output-actions">
+                            <button
+                                class="secondary-button"
+                                type="submit"
+                                name="action"
+                                value="regenerate"
+                            >
+                                ↻ Regenerate
+                            </button>
+
+                            <button
+                                class="primary-button refine-button"
+                                type="submit"
+                                name="action"
+                                value="refine"
+                            >
+                                Refine draft <span>↗</span>
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </section>
+        </form>
+    </main>
+
+
+    <footer>
+        <span>CONTENT STUDIO</span>
+        <span>PYTHON · FLASK · GROQ</span>
+    </footer>
+
+</div>
+
+<script
+    src="{{ url_for('static', filename='js/script.js') }}"
+></script>
+</body>
+</html>
